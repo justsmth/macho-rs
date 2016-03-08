@@ -2,6 +2,9 @@
 name = "macho"
 version = "0.1.0"
 authors = ["Richo Healey <richo@psych0tik.net>"]
+license = "MIT"
+repository = "https://github.com/richo/macho-rs"
+description = "Mach-O parser in rust"
 
 [dependencies]
 
