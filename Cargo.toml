@@ -1,0 +1,8 @@
+[package]
+name = "macho"
+version = "0.1.0"
+authors = ["Richo Healey <richo@psych0tik.net>"]
+
+[dependencies]
+
+nom = "1.*"
