@@ -16,12 +16,13 @@ pub type vm_prot_t = i32;
 
 #[derive(Debug)]
 pub struct MachHeader<'a> {
-    pub header: MachHeader_,
+    pub header: Header,
+    pub segments: Vec<SegmentCommand<'a>>,
     pub commands: Vec<LoadCommand<'a>>,
 }
 
 #[derive(Debug)]
-pub struct MachHeader_ {
+pub struct Header {
     pub magic: u32,
     pub cputype: cpu_type_t,
     pub cpusubtype: cpu_subtype_t,
@@ -29,26 +30,42 @@ pub struct MachHeader_ {
     pub ncmds: u32,
     pub sizeofcmds: u32,
     pub flags: u32,
-    reserved :u32,
+    reserved: u32,
 }
+
+pub const LC_SEGMENT_64: u32 = 25;
 
 impl<'a> MachHeader<'a> {
     pub fn parse(bytes: &'a [u8]) -> Option<MachHeader> {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
             let mut rest = _rest;
             let mut commands = vec![];
+            let mut segments = vec![];
             for _ in 0.. header.ncmds {
-                if let IResult::Done(_rest, cmd) = load_command(rest) {
-                    rest = _rest;
-                    commands.push(cmd);
-                } else {
-                    return None
+                // Thanks to nom being zero copy, we can actually parse the same memory twice.
+                // We have one attempt to see what type it is, then we have another go to get that
+                // object.
+                if let IResult::Done(_, cmd) = load_command(rest) {
+                    match cmd.cmd {
+                        LC_SEGMENT_64 => {
+                            if let IResult::Done(_rest, segment) = segment_command(rest) {
+                                rest = _rest;
+                                segments.push(segment);
+                            } else {
+                                return None
+                            }
+                        },
+                        _ => {
+                            commands.push(cmd)
+                        }
+                    }
                 }
             }
 
             Some(MachHeader {
-                header: header,
-                commands: commands,
+                    header: header,
+                    commands: commands,
+                    segments: segments,
             })
         } else {
             return None
@@ -57,7 +74,7 @@ impl<'a> MachHeader<'a> {
 }
 
 #[derive(Debug)]
-pub struct SegmentCommand {
+pub struct SegmentCommand<'a> {
     pub cmd: u32,
     pub cmdsize: u32,
     pub segname: String,
@@ -69,6 +86,7 @@ pub struct SegmentCommand {
     pub initprot: vm_prot_t,
     pub nsects: u32,
     pub flags: u32,
+    pub data: &'a [u8],
 }
 
 #[derive(Debug)]
@@ -94,7 +112,7 @@ named!(load_command<&[u8], LoadCommand>,
            )
        );
 
-named!(mach_header<&[u8], MachHeader_>,
+named!(mach_header<&[u8], Header>,
        chain!(
            magic: le_u32 ~
            cputype: le_i32 ~
@@ -108,7 +126,7 @@ named!(mach_header<&[u8], MachHeader_>,
 
            || {
                assert_eq!(0xfeedfacf, magic);
-               MachHeader_ {
+               Header {
                    magic: magic,
                    cputype: cputype,
                    // This value needs to be masked to match otool -h
@@ -156,6 +174,7 @@ named!(segment_command<&[u8], SegmentCommand>,
                    initprot: initprot,
                    nsects: nsects,
                    flags: flags,
+                   data: data,
                }
            }
         )

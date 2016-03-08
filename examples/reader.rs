@@ -20,7 +20,9 @@ fn main() {
 
     match macho::MachHeader::parse(&buf[..]) {
         Some(header) => {
-            println!("{:?}", header)
+            for i in header.segments {
+                println!("Segment: {}", i.segname);
+            }
         },
         None => {
             panic!("Error parsing header")
