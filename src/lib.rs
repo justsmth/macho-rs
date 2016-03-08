@@ -15,9 +15,9 @@ pub type cpu_subtype_t = u32;
 pub type vm_prot_t = i32;
 
 #[derive(Debug)]
-pub struct MachHeader {
+pub struct MachHeader<'a> {
     pub header: MachHeader_,
-    pub segments: Vec<SegmentCommand>,
+    pub commands: Vec<LoadCommand<'a>>,
 }
 
 #[derive(Debug)]
@@ -32,15 +32,15 @@ pub struct MachHeader_ {
     reserved :u32,
 }
 
-impl MachHeader {
-    pub fn parse(bytes: &[u8]) -> Option<MachHeader> {
+impl<'a> MachHeader<'a> {
+    pub fn parse(bytes: &'a [u8]) -> Option<MachHeader> {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
             let mut rest = _rest;
-            let mut segments = vec![];
+            let mut commands = vec![];
             for _ in 0.. header.ncmds {
-                if let IResult::Done(_rest, cmd) = segment_command(rest) {
+                if let IResult::Done(_rest, cmd) = load_command(rest) {
                     rest = _rest;
-                    segments.push(cmd);
+                    commands.push(cmd);
                 } else {
                     return None
                 }
@@ -48,7 +48,7 @@ impl MachHeader {
 
             Some(MachHeader {
                 header: header,
-                segments: segments,
+                commands: commands,
             })
         } else {
             return None
@@ -70,6 +70,29 @@ pub struct SegmentCommand {
     pub nsects: u32,
     pub flags: u32,
 }
+
+#[derive(Debug)]
+pub struct LoadCommand<'a> {
+    pub cmd: u32,
+    pub cmdsize: u32,
+    pub data: &'a [u8],
+}
+
+named!(load_command<&[u8], LoadCommand>,
+       chain!(
+           cmd: le_u32 ~
+           cmdsize: le_u32 ~
+           data: take!(cmdsize - 8),
+
+           || {
+               LoadCommand {
+                   cmd: cmd,
+                   cmdsize: cmdsize,
+                   data: data,
+               }
+           }
+           )
+       );
 
 named!(mach_header<&[u8], MachHeader_>,
        chain!(
@@ -105,14 +128,16 @@ named!(segment_command<&[u8], SegmentCommand>,
            cmd: le_u32 ~
            cmdsize: le_u32 ~
            segname: take!(16) ~
-           vmaddr: le_u32 ~
-           vmsize: le_u32 ~
-           fileoff: le_u32 ~
-           filesize: le_u32 ~
+           vmaddr: le_u64 ~
+           vmsize: le_u64 ~
+           fileoff: le_u64 ~
+           filesize: le_u64 ~
            maxprot: le_i32 ~
            initprot: le_i32 ~
            nsects: le_u32 ~
-           flags: le_u32 ,
+           flags: le_u32 ~
+           data: take!(cmdsize - 72) ,
+
 
            || {
 
