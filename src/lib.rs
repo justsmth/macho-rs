@@ -54,10 +54,13 @@ impl<'a> MachHeader<'a> {
                     match cmd.cmd {
                         LC_SEGMENT_64 => {
                             if let IResult::Done(_rest, mut segment) = segment_command(rest) {
-                                let sections_slice = &_rest[72 .. segment.cmdsize as usize];
-                                if let IResult::Done(_, sections) = sections(sections_slice) {
+                                let sections_slice = &_rest[.. (segment.cmdsize - 72) as usize];
+                                if let IResult::Done(leftover, sections) = sections(sections_slice) {
                                     assert_eq!(sections.len(), segment.nsects as usize);
+                                    assert_eq!(leftover.len(), 0);
                                     segment.sections.extend(sections)
+                                } else {
+                                    return None
                                 }
                                 rest = &_rest[(segment.cmdsize - 72) as usize..];
                                 segments.push(segment);
@@ -123,7 +126,7 @@ pub struct Section {
 }
 
 named!(sections<&[u8], Vec<Section> >,
-       many1!(section));
+       many0!(section));
 named!(section<&[u8], Section>,
        chain!(
            sectname: take!(16) ~
