@@ -14,10 +14,15 @@ pub type cpu_subtype_t = u32;
 #[allow(non_camel_case_types)]
 pub type vm_prot_t = i32;
 
+fn to_string(buf: &[u8]) -> String {
+    let slice = unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) };
+    std::str::from_utf8(slice.to_bytes()).unwrap().to_string()
+}
+
 #[derive(Debug)]
 pub struct MachHeader<'a> {
     pub header: Header,
-    pub segments: Vec<SegmentCommand<'a>>,
+    pub segments: Vec<SegmentCommand>,
     pub commands: Vec<LoadCommand<'a>>,
 }
 
@@ -48,8 +53,13 @@ impl<'a> MachHeader<'a> {
                 if let IResult::Done(_, cmd) = load_command(rest) {
                     match cmd.cmd {
                         LC_SEGMENT_64 => {
-                            if let IResult::Done(_rest, segment) = segment_command(rest) {
-                                rest = _rest;
+                            if let IResult::Done(_rest, mut segment) = segment_command(rest) {
+                                let sections_slice = &_rest[72 .. segment.cmdsize as usize];
+                                if let IResult::Done(_, sections) = sections(sections_slice) {
+                                    assert_eq!(sections.len(), segment.nsects as usize);
+                                    segment.sections.extend(sections)
+                                }
+                                rest = &_rest[(segment.cmdsize - 72) as usize..];
                                 segments.push(segment);
                             } else {
                                 return None
@@ -74,7 +84,7 @@ impl<'a> MachHeader<'a> {
 }
 
 #[derive(Debug)]
-pub struct SegmentCommand<'a> {
+pub struct SegmentCommand {
     pub cmd: u32,
     pub cmdsize: u32,
     pub segname: String,
@@ -86,7 +96,7 @@ pub struct SegmentCommand<'a> {
     pub initprot: vm_prot_t,
     pub nsects: u32,
     pub flags: u32,
-    pub data: &'a [u8],
+    pub sections: Vec<Section>,
 }
 
 #[derive(Debug)]
@@ -95,6 +105,59 @@ pub struct LoadCommand<'a> {
     pub cmdsize: u32,
     pub data: &'a [u8],
 }
+
+#[derive(Debug)]
+pub struct Section {
+	pub sectname: String, /* name of this section */
+    pub segname: String, /* segment this section goes in */
+    pub addr: u64, /* memory address of this section */
+    pub size: u64, /* size in bytes of this section */
+    pub offset: u32, /* file offset of this section */
+    pub align: u32, /* section alignment (power of 2) */
+    pub reloff: u32, /* file offset of relocation entries */
+    pub nreloc: u32, /* number of relocation entries */
+    pub flags: u32, /* flags (section type and attributes)*/
+    reserved1: u32, /* reserved (for offset or index) */
+    reserved2: u32, /* reserved (for count or sizeof) */
+    reserved3: u32, /* reserved */
+}
+
+named!(sections<&[u8], Vec<Section> >,
+       many1!(section));
+named!(section<&[u8], Section>,
+       chain!(
+           sectname: take!(16) ~
+           segname: take!(16) ~
+           addr: le_u64 ~
+           size: le_u64 ~
+           offset: le_u32 ~
+           align: le_u32 ~
+           reloff: le_u32 ~
+           nreloc: le_u32 ~
+           flags: le_u32 ~
+           reserved1: le_u32 ~
+           reserved2: le_u32 ~
+           reserved3: le_u32 ,
+
+           || {
+               // assert_eq!(size, 80);
+               Section {
+                   sectname: to_string(sectname),
+                   segname: to_string(segname),
+                   addr: addr,
+                   size: size,
+                   offset: offset,
+                   align: align,
+                   reloff: reloff,
+                   nreloc: nreloc,
+                   flags: flags,
+                   reserved1: reserved1,
+                   reserved2: reserved2,
+                   reserved3: reserved3,
+               }
+           }
+           )
+       );
 
 named!(load_command<&[u8], LoadCommand>,
        chain!(
@@ -153,19 +216,13 @@ named!(segment_command<&[u8], SegmentCommand>,
            maxprot: le_i32 ~
            initprot: le_i32 ~
            nsects: le_u32 ~
-           flags: le_u32 ~
-           data: take!(cmdsize - 72) ,
-
+           flags: le_u32 ,
 
            || {
-
-               let slice = unsafe { CStr::from_ptr(segname.as_ptr() as *const c_char) };
-               let name = std::str::from_utf8(slice.to_bytes()).unwrap().to_string();
-
                SegmentCommand {
                    cmd: cmd,
                    cmdsize: cmdsize,
-                   segname: name,
+                   segname: to_string(segname),
                    vmaddr: vmaddr,
                    vmsize: vmsize,
                    fileoff: fileoff,
@@ -174,10 +231,8 @@ named!(segment_command<&[u8], SegmentCommand>,
                    initprot: initprot,
                    nsects: nsects,
                    flags: flags,
-                   data: data,
+                   sections: vec![],
                }
            }
         )
     );
-
-
