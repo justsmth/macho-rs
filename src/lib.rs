@@ -3,15 +3,16 @@ extern crate nom;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
-use nom::{le_u64,le_u32};
+use nom::{le_u64,le_u32,le_i32};
 use nom::IResult;
 
+// These are all integer_t, aka int
 #[allow(non_camel_case_types)]
-pub type cpu_type_t = usize;
+pub type cpu_type_t = i32;
 #[allow(non_camel_case_types)]
-pub type cpu_subtype_t = usize;
+pub type cpu_subtype_t = i32;
 #[allow(non_camel_case_types)]
-pub type vm_prot_t = usize;
+pub type vm_prot_t = i32;
 
 #[derive(Debug)]
 pub struct MachHeader {
@@ -28,6 +29,7 @@ pub struct MachHeader_ {
     pub ncmds: u32,
     pub sizeofcmds: u32,
     pub flags: u32,
+    reserved :u32,
 }
 
 impl MachHeader {
@@ -35,7 +37,7 @@ impl MachHeader {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
             let mut rest = _rest;
             let mut segments = vec![];
-            for _ in [0.. header.ncmds].iter() {
+            for _ in 0.. header.ncmds {
                 if let IResult::Done(_rest, cmd) = segment_command(rest) {
                     rest = _rest;
                     segments.push(cmd);
@@ -72,23 +74,26 @@ pub struct SegmentCommand {
 named!(mach_header<&[u8], MachHeader_>,
        chain!(
            magic: le_u32 ~
-           // TODO this is presumably broken on 32bit
-           cputype: le_u64 ~
-           cpusubtype: le_u64 ~
+           cputype: le_i32 ~
+           cpusubtype: le_i32 ~
            filetype: le_u32 ~
            ncmds: le_u32 ~
            sizeofcmds: le_u32 ~
-           flags: le_u32 ,
+           flags: le_u32 ~
+           reserved: le_u32,
+
 
            || {
+               assert_eq!(0xfeedfacf, magic);
                MachHeader_ {
                    magic: magic,
-                   cputype: cputype as usize,
-                   cpusubtype: cpusubtype as usize,
+                   cputype: cputype,
+                   cpusubtype: cpusubtype,
                    filetype: filetype,
                    ncmds: ncmds,
                    sizeofcmds: sizeofcmds,
                    flags: flags,
+                   reserved: reserved,
                }
            }
            )
@@ -103,8 +108,8 @@ named!(segment_command<&[u8], SegmentCommand>,
            vmsize: le_u32 ~
            fileoff: le_u32 ~
            filesize: le_u32 ~
-           maxprot: le_u64 ~
-           initprot: le_u64 ~
+           maxprot: le_i32 ~
+           initprot: le_i32 ~
            nsects: le_u32 ~
            flags: le_u32 ,
 
@@ -121,8 +126,8 @@ named!(segment_command<&[u8], SegmentCommand>,
                    vmsize: vmsize,
                    fileoff: fileoff,
                    filesize: filesize,
-                   maxprot: maxprot as usize,
-                   initprot: initprot as usize,
+                   maxprot: maxprot,
+                   initprot: initprot,
                    nsects: nsects,
                    flags: flags,
                }
