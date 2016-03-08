@@ -10,7 +10,7 @@ use nom::IResult;
 #[allow(non_camel_case_types)]
 pub type cpu_type_t = i32;
 #[allow(non_camel_case_types)]
-pub type cpu_subtype_t = i32;
+pub type cpu_subtype_t = u32;
 #[allow(non_camel_case_types)]
 pub type vm_prot_t = i32;
 
@@ -75,7 +75,7 @@ named!(mach_header<&[u8], MachHeader_>,
        chain!(
            magic: le_u32 ~
            cputype: le_i32 ~
-           cpusubtype: le_i32 ~
+           cpusubtype: le_u32 ~
            filetype: le_u32 ~
            ncmds: le_u32 ~
            sizeofcmds: le_u32 ~
@@ -88,6 +88,7 @@ named!(mach_header<&[u8], MachHeader_>,
                MachHeader_ {
                    magic: magic,
                    cputype: cputype,
+                   // This value needs to be masked to match otool -h
                    cpusubtype: cpusubtype,
                    filetype: filetype,
                    ncmds: ncmds,
