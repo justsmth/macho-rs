@@ -6,7 +6,7 @@ use std::os::raw::c_char;
 use nom::{le_u64,le_u32,le_i32};
 use nom::IResult;
 
-use constants::*;
+pub use constants::*;
 
 mod constants;
 
@@ -56,7 +56,7 @@ impl<'a> MachHeader<'a> {
                 // object.
                 if let IResult::Done(_, cmd) = load_command(rest) {
                     match cmd.cmd {
-                        LC_SEGMENT_64 => {
+                        c if c == LcType::LC_SEGMENT_64 as u32 => {
                             if let IResult::Done(_rest, mut segment) = segment_command(rest) {
                                 let sections_slice = &_rest[.. (segment.cmdsize - 72) as usize];
                                 if let IResult::Done(leftover, sections) = sections(sections_slice) {
