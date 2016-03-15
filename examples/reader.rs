@@ -5,7 +5,6 @@ extern crate macho;
 use std::env;
 use std::fs;
 use std::io::Read;
-use nom::IResult;
 
 fn main() {
     let args: Vec<_> = env::args().collect();
