@@ -6,6 +6,10 @@ use std::os::raw::c_char;
 use nom::{le_u64,le_u32,le_i32};
 use nom::IResult;
 
+use constants::*;
+
+mod constants;
+
 // These are all integer_t, aka int
 #[allow(non_camel_case_types)]
 pub type cpu_type_t = i32;
@@ -191,7 +195,7 @@ named!(mach_header<&[u8], Header>,
 
 
            || {
-               assert_eq!(0xfeedfacf, magic);
+               assert_eq!(MH_MAGIC_64, magic);
                Header {
                    magic: magic,
                    cputype: cputype,
