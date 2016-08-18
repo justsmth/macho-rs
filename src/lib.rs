@@ -55,6 +55,7 @@ impl<'a> MachHeader<'a> {
                 // We have one attempt to see what type it is, then we have another go to get that
                 // object.
                 if let IResult::Done(_, cmd) = load_command(rest) {
+                    let len = cmd.cmdsize;
                     match cmd.cmd {
                         c if c == LcType::LC_SEGMENT_64 as u32 => {
                             if let IResult::Done(_rest, mut segment) = segment_command(rest) {
@@ -66,7 +67,6 @@ impl<'a> MachHeader<'a> {
                                 } else {
                                     return None
                                 }
-                                rest = &_rest[(segment.cmdsize - 72) as usize..];
                                 segments.push(segment);
                             } else {
                                 return None
@@ -76,6 +76,7 @@ impl<'a> MachHeader<'a> {
                             commands.push(cmd)
                         }
                     }
+                    rest = &rest[len as usize..];
                 }
             }
 
