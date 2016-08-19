@@ -1,12 +1,12 @@
 [package]
-name = "macho"
-version = "0.3.0"
 authors = ["Richo Healey <richo@psych0tik.net>"]
-license = "MIT"
-repository = "https://github.com/richo/macho-rs"
 description = "Mach-O parser in rust"
 documentation = "http://richo.psych0tik.net/macho-rs/macho"
+license = "MIT"
+name = "macho"
+repository = "https://github.com/richo/macho-rs"
+version = "0.3.0"
 
 [dependencies]
-
 nom = "1.*"
+uuid = "*"

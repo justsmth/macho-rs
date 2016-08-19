@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate nom;
+extern crate uuid;
 use std::ffi::CStr;
 use std::os::raw::c_char;
 
@@ -26,6 +27,7 @@ fn to_string(buf: &[u8]) -> String {
 #[derive(Debug)]
 pub struct MachHeader<'a> {
     pub header: Header,
+    pub uuid: Option<uuid::Uuid>,
     pub segments: Vec<SegmentCommand>,
     pub commands: Vec<LoadCommand<'a>>,
 }
@@ -48,6 +50,7 @@ impl<'a> MachHeader<'a> {
     pub fn parse(bytes: &'a [u8]) -> Option<MachHeader> {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
             let mut rest = _rest;
+            let mut uuid = None;
             let mut commands = vec![];
             let mut segments = vec![];
             for _ in 0.. header.ncmds {
@@ -72,6 +75,11 @@ impl<'a> MachHeader<'a> {
                                 return None
                             }
                         },
+                        c if c == LcType::LC_UUID as u32 => {
+                            if let Ok(_uuid) = uuid::Uuid::from_bytes(cmd.data) {
+                                uuid = Some(_uuid);
+                            }
+                        },
                         _ => {
                             commands.push(cmd)
                         }
@@ -82,6 +90,7 @@ impl<'a> MachHeader<'a> {
 
             Some(MachHeader {
                     header: header,
+                    uuid: uuid,
                     commands: commands,
                     segments: segments,
             })
@@ -254,5 +263,16 @@ mod test {
         let binary = include_bytes!("../test/lol");
         let header = MachHeader::parse(binary).unwrap();
         assert_eq!(header.header.ncmds, 14);
+    }
+
+    #[test]
+    fn test_parses_uuid() {
+        let binary = include_bytes!("../test/dwarfdump");
+        let header = MachHeader::parse(binary).unwrap();
+
+        let expected = "1b1a1ba2-c94d-3dc9-b55c-97a296ff0a35";
+        let uuid = format!("{}", header.uuid.unwrap());
+
+        assert_eq!(expected, uuid);
     }
 }
