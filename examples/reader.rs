@@ -17,7 +17,7 @@ fn main() {
     let mut buf: Vec<u8> = Vec::new();
     let _ = fh.read_to_end(&mut buf);
 
-    match macho::MachHeader::parse(&buf[..]) {
+    match macho::MachObject::parse(&buf[..]) {
         Some(header) => {
             println!("{:#?}", header);
         },

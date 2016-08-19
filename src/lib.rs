@@ -25,7 +25,7 @@ fn to_string(buf: &[u8]) -> String {
 }
 
 #[derive(Debug)]
-pub struct MachHeader<'a> {
+pub struct MachObject<'a> {
     pub header: Header,
     pub uuid: Option<uuid::Uuid>,
     pub segments: Vec<SegmentCommand>,
@@ -44,8 +44,8 @@ pub struct Header {
     reserved: u32,
 }
 
-impl<'a> MachHeader<'a> {
-    pub fn parse(bytes: &'a [u8]) -> Option<MachHeader> {
+impl<'a> MachObject<'a> {
+    pub fn parse(bytes: &'a [u8]) -> Option<MachObject> {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
             let mut rest = _rest;
             let mut uuid = None;
@@ -86,7 +86,7 @@ impl<'a> MachHeader<'a> {
                 }
             }
 
-            Some(MachHeader {
+            Some(MachObject {
                     header: header,
                     uuid: uuid,
                     commands: commands,
@@ -259,14 +259,14 @@ mod test {
     #[test]
     fn test_parses_lol() {
         let binary = include_bytes!("../test/lol");
-        let header = MachHeader::parse(binary).unwrap();
+        let header = MachObject::parse(binary).unwrap();
         assert_eq!(header.header.ncmds, 14);
     }
 
     #[test]
     fn test_parses_uuid() {
         let binary = include_bytes!("../test/dwarfdump");
-        let header = MachHeader::parse(binary).unwrap();
+        let header = MachObject::parse(binary).unwrap();
 
         let expected = "1b1a1ba2-c94d-3dc9-b55c-97a296ff0a35";
         let uuid = format!("{}", header.uuid.unwrap());
