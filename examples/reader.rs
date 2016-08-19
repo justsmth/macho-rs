@@ -19,7 +19,7 @@ fn main() {
 
     match macho::MachHeader::parse(&buf[..]) {
         Some(header) => {
-            println!("{:?}", header);
+            println!("{:#?}", header);
         },
         None => {
             panic!("Error parsing header")
