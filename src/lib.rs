@@ -44,8 +44,6 @@ pub struct Header {
     reserved: u32,
 }
 
-pub const LC_SEGMENT_64: u32 = 25;
-
 impl<'a> MachHeader<'a> {
     pub fn parse(bytes: &'a [u8]) -> Option<MachHeader> {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
