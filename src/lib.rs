@@ -244,3 +244,15 @@ named!(segment_command<&[u8], SegmentCommand>,
            }
         )
     );
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_parses_lol() {
+        let binary = include_bytes!("../test/lol");
+        let header = MachHeader::parse(binary).unwrap();
+        assert_eq!(header.header.ncmds, 14);
+    }
+}
