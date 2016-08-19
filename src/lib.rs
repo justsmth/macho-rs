@@ -45,7 +45,7 @@ pub struct Header {
 }
 
 impl<'a> MachObject<'a> {
-    pub fn parse(bytes: &'a [u8]) -> Option<MachObject> {
+    pub fn parse(bytes: &'a [u8]) -> Result<MachObject, ()> {
         if let IResult::Done(_rest, header) = mach_header(bytes) {
             let mut rest = _rest;
             let mut uuid = None;
@@ -66,11 +66,11 @@ impl<'a> MachObject<'a> {
                                     assert_eq!(leftover.len(), 0);
                                     segment.sections.extend(sections)
                                 } else {
-                                    return None
+                                    return Err(())
                                 }
                                 segments.push(segment);
                             } else {
-                                return None
+                                return Err(())
                             }
                         },
                         c if c == LcType::LC_UUID as u32 => {
@@ -83,17 +83,19 @@ impl<'a> MachObject<'a> {
                         }
                     }
                     rest = &rest[len as usize..];
+                } else {
+                    return Err(())
                 }
             }
 
-            Some(MachObject {
+            Ok(MachObject {
                     header: header,
                     uuid: uuid,
                     commands: commands,
                     segments: segments,
             })
         } else {
-            return None
+            return Err(())
         }
     }
 }

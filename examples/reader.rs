@@ -18,10 +18,10 @@ fn main() {
     let _ = fh.read_to_end(&mut buf);
 
     match macho::MachObject::parse(&buf[..]) {
-        Some(header) => {
+        Ok(header) => {
             println!("{:#?}", header);
         },
-        None => {
+        Err(_) => {
             panic!("Error parsing header")
         }
 
