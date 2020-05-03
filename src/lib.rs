@@ -2,7 +2,7 @@
 extern crate nom;
 extern crate uuid;
 use std::ffi::CStr;
-use std::os::raw::c_char;
+use std::os::raw::{c_char, c_int};
 
 use nom::{le_u64,le_u32,le_i32};
 use nom::IResult;
@@ -13,11 +13,11 @@ mod constants;
 
 // These are all integer_t, aka int
 #[allow(non_camel_case_types)]
-pub type cpu_type_t = i32;
+pub type cpu_type_t = c_int;
 #[allow(non_camel_case_types)]
-pub type cpu_subtype_t = u32;
+pub type cpu_subtype_t = c_int;
 #[allow(non_camel_case_types)]
-pub type vm_prot_t = i32;
+pub type vm_prot_t = c_int;
 
 fn to_string(buf: &[u8]) -> String {
     let slice = unsafe { CStr::from_ptr(buf.as_ptr() as *const c_char) };
@@ -89,10 +89,10 @@ impl<'a> MachObject<'a> {
             }
 
             Ok(MachObject {
-                    header: header,
-                    uuid: uuid,
-                    commands: commands,
-                    segments: segments,
+                    header,
+                    uuid,
+                    commands,
+                    segments,
             })
         } else {
             return Err(())
@@ -161,16 +161,16 @@ named!(section<&[u8], Section>,
                Section {
                    sectname: to_string(sectname),
                    segname: to_string(segname),
-                   addr: addr,
-                   size: size,
-                   offset: offset,
-                   align: align,
-                   reloff: reloff,
-                   nreloc: nreloc,
-                   flags: flags,
-                   reserved1: reserved1,
-                   reserved2: reserved2,
-                   reserved3: reserved3,
+                   addr,
+                   size,
+                   offset,
+                   align,
+                   reloff,
+                   nreloc,
+                   flags,
+                   reserved1,
+                   reserved2,
+                   reserved3,
                }
            }
            )
@@ -184,9 +184,9 @@ named!(load_command<&[u8], LoadCommand>,
 
            || {
                LoadCommand {
-                   cmd: cmd,
-                   cmdsize: cmdsize,
-                   data: data,
+                   cmd,
+                   cmdsize,
+                   data,
                }
            }
            )
@@ -196,7 +196,7 @@ named!(mach_header<&[u8], Header>,
        chain!(
            magic: le_u32 ~
            cputype: le_i32 ~
-           cpusubtype: le_u32 ~
+           cpusubtype: le_i32 ~
            filetype: le_u32 ~
            ncmds: le_u32 ~
            sizeofcmds: le_u32 ~
@@ -207,15 +207,15 @@ named!(mach_header<&[u8], Header>,
            || {
                assert_eq!(MH_MAGIC_64, magic);
                Header {
-                   magic: magic,
-                   cputype: cputype,
+                   magic,
+                   cputype,
                    // This value needs to be masked to match otool -h
-                   cpusubtype: cpusubtype,
-                   filetype: filetype,
-                   ncmds: ncmds,
-                   sizeofcmds: sizeofcmds,
-                   flags: flags,
-                   reserved: reserved,
+                   cpusubtype,
+                   filetype,
+                   ncmds,
+                   sizeofcmds,
+                   flags,
+                   reserved,
                }
            }
            )
@@ -237,17 +237,17 @@ named!(segment_command<&[u8], SegmentCommand>,
 
            || {
                SegmentCommand {
-                   cmd: cmd,
-                   cmdsize: cmdsize,
+                   cmd,
+                   cmdsize,
                    segname: to_string(segname),
-                   vmaddr: vmaddr,
-                   vmsize: vmsize,
-                   fileoff: fileoff,
-                   filesize: filesize,
-                   maxprot: maxprot,
-                   initprot: initprot,
-                   nsects: nsects,
-                   flags: flags,
+                   vmaddr,
+                   vmsize,
+                   fileoff,
+                   filesize,
+                   maxprot,
+                   initprot,
+                   nsects,
+                   flags,
                    sections: vec![],
                }
            }
