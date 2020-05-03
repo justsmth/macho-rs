@@ -7,7 +7,7 @@ use std::os::raw::c_char;
 use nom::{le_u64,le_u32,le_i32};
 use nom::IResult;
 
-pub use constants::*;
+pub use crate::constants::*;
 
 mod constants;
 
@@ -270,7 +270,7 @@ mod test {
         let binary = include_bytes!("../test/dwarfdump");
         let header = MachObject::parse(binary).unwrap();
 
-        let expected = "1b1a1ba2-c94d-3dc9-b55c-97a296ff0a35";
+        let expected = "7ab877de-19d1-3a1c-95bf-ff8a0647373a";
         let uuid = format!("{}", header.uuid.unwrap());
 
         assert_eq!(expected, uuid);

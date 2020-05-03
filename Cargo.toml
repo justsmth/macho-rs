@@ -6,6 +6,7 @@ license = "MIT"
 name = "macho"
 repository = "https://github.com/richo/macho-rs"
 version = "0.4.1"
+# edition = "2018"
 
 [dependencies]
 nom = "1.*"
