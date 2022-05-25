@@ -203,12 +203,12 @@ pub struct SymbolTable {
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct SymbolTableEntry {
-    n_strx: i32,
-    n_type: u8,
-    n_sect: u8,
-    n_desc: i16,
-    n_value: u64,
-    symbol: String,
+    pub n_strx: i32,
+    pub n_type: u8,
+    pub n_sect: u8,
+    pub n_desc: i16,
+    pub n_value: u64,
+    pub symbol: String,
 }
 
 named!(
