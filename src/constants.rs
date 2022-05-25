@@ -163,7 +163,7 @@ pub enum LcType {
 }
 
 // See: https://github.com/aidansteele/osx-abi-macho-file-format-reference#nlist
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabTypeMask {
@@ -173,7 +173,7 @@ pub enum SymTabTypeMask {
     N_EXT = 0x01,
 }
 
-#[repr(u32)]
+#[repr(u8)]
 #[derive(Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabType {
@@ -184,7 +184,7 @@ pub enum SymTabType {
     N_INDR = 0xa
 }
 
-#[repr(u32)]
+#[repr(u16)]
 #[derive(Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabRefMask {
@@ -195,7 +195,7 @@ pub enum SymTabRefMask {
     N_WEAK_DEF = 0x80,
 }
 
-#[repr(u32)]
+#[repr(u16)]
 #[derive(Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabRef {
