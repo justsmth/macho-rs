@@ -4,7 +4,7 @@ pub const MH_CIGAM_64: u32 = 0xcffaedfe;
 const LC_REQ_DYLD: u32 = 0x80000000;
 
 #[repr(u32)]
-#[derive(Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum LcType {
     /// After MacOS X 10.1 when a new load command is added that is required to be
@@ -164,7 +164,7 @@ pub enum LcType {
 
 // See: https://github.com/aidansteele/osx-abi-macho-file-format-reference#nlist
 #[repr(u8)]
-#[derive(Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabTypeMask {
     N_STAB = 0xe0,
@@ -174,7 +174,7 @@ pub enum SymTabTypeMask {
 }
 
 #[repr(u8)]
-#[derive(Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabType {
     N_UNDF = 0x0,
@@ -185,7 +185,7 @@ pub enum SymTabType {
 }
 
 #[repr(u16)]
-#[derive(Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabRefMask {
     REFERENCE_TYPE = 0xF,
@@ -196,7 +196,7 @@ pub enum SymTabRefMask {
 }
 
 #[repr(u16)]
-#[derive(Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum SymTabRef {
     REFERENCE_FLAG_UNDEFINED_NON_LAZY = 0x0,

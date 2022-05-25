@@ -406,16 +406,17 @@ mod test {
 
         assert_eq!(1, header.symtab.len());
         assert_eq!(15, header.symtab.get(0).unwrap().entries.len());
+        let last_entry = header
+            .symtab
+            .get(0)
+            .unwrap()
+            .entries
+            .get(14)
+            .unwrap();
         assert_eq!(
             "dyld_stub_binder",
-            header
-                .symtab
-                .get(0)
-                .unwrap()
-                .entries
-                .get(14)
-                .unwrap()
-                .symbol
-        )
+            last_entry.symbol
+        );
+        assert_eq!(0, last_entry.n_type & SymTabTypeMask::N_PEXT as u8);
     }
 }
