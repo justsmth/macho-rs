@@ -161,3 +161,48 @@ pub enum LcType {
     /// build for Watch min OS version
     LC_VERSION_MIN_WATCHOS = 0x30,
 }
+
+// See: https://github.com/aidansteele/osx-abi-macho-file-format-reference#nlist
+#[repr(u32)]
+#[derive(Eq, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum SymTabTypeMask {
+    N_STAB = 0xe0,
+    N_PEXT = 0x10,
+    N_TYPE = 0x0e,
+    N_EXT = 0x01,
+}
+
+#[repr(u32)]
+#[derive(Eq, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum SymTabType {
+    N_UNDF = 0x0,
+    N_ABS = 0x2,
+    N_SECT = 0xe,
+    N_PBUD = 0xc,
+    N_INDR = 0xa
+}
+
+#[repr(u32)]
+#[derive(Eq, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum SymTabRefMask {
+    REFERENCE_TYPE = 0xF,
+    REFERENCED_DYNAMICALLY = 0x10,
+    N_DESC_DISCARDED = 0x20,
+    N_WEAK_REF = 0x40,
+    N_WEAK_DEF = 0x80,
+}
+
+#[repr(u32)]
+#[derive(Eq, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum SymTabRef {
+    REFERENCE_FLAG_UNDEFINED_NON_LAZY = 0x0,
+    REFERENCE_FLAG_UNDEFINED_LAZY = 0x1,
+    REFERENCE_FLAG_DEFINED = 0x2,
+    REFERENCE_FLAG_PRIVATE_DEFINED = 0x3,
+    REFERENCE_FLAG_PRIVATE_UNDEFINED_NON_LAZY = 0x4,
+    REFERENCE_FLAG_PRIVATE_UNDEFINED_LAZY = 0x5,
+}
