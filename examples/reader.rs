@@ -18,10 +18,9 @@ fn main() {
     match macho::MachObject::parse(&buf[..]) {
         Ok(header) => {
             println!("{:#?}", header);
-        },
+        }
         Err(_) => {
             panic!("Error parsing header")
         }
-
     }
 }

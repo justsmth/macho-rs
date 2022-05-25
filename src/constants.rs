@@ -4,7 +4,7 @@ pub const MH_CIGAM_64: u32 = 0xcffaedfe;
 const LC_REQ_DYLD: u32 = 0x80000000;
 
 #[repr(u32)]
-#[derive(Eq,PartialEq)]
+#[derive(Eq, PartialEq)]
 #[allow(non_camel_case_types)]
 pub enum LcType {
     /// After MacOS X 10.1 when a new load command is added that is required to be
@@ -120,7 +120,7 @@ pub enum LcType {
     LC_DYLD_INFO = 0x22,
 
     /// compressed dyld information only
-    LC_DYLD_INFO_ONLY = (0x22|LC_REQ_DYLD),
+    LC_DYLD_INFO_ONLY = (0x22 | LC_REQ_DYLD),
 
     /// load upward dylib
     LC_LOAD_UPWARD_DYLIB = (0x23 | LC_REQ_DYLD),
@@ -138,7 +138,7 @@ pub enum LcType {
     LC_DYLD_ENVIRONMENT = 0x27,
 
     /// replacement for LC_UNIXTHREAD
-    LC_MAIN = (0x28|LC_REQ_DYLD),
+    LC_MAIN = (0x28 | LC_REQ_DYLD),
 
     /// table of non-instructions in __text
     LC_DATA_IN_CODE = 0x29,
